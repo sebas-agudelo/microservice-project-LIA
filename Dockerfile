@@ -1,20 +1,18 @@
-# Använd officiell Node.js-bild som bas
-FROM node:16
+# Använd en officiell Node.js-bild
+FROM node:18
 
-# Skapa arbetskatalogen
-WORKDIR /app
+# Ange arbetskatalog i containern
+WORKDIR /usr/src/app
 
-# Kopiera package.json och package-lock.json
+# Kopiera applikationsfiler
 COPY package*.json ./
+COPY . .
 
 # Installera beroenden
 RUN npm install
 
-# Kopiera all kod till arbetskatalogen
-COPY . .
-
-# Exponera porten som applikationen kör på
+# Exponera porten för applikationen
 EXPOSE 3000
 
-# Starta appen
-CMD ["node", "src/app.js"]  
+# Starta applikationen
+CMD ["npm", "run", "start"]
