@@ -9,9 +9,9 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - DB_HOST=db
+      - DB_HOST=localhost
       - DB_USER=root
-      - DB_PASSWORD=my-secret-pw
+      - DB_PASSWORD=root
       - DB_NAME=db_practice
     depends_on:
       - db
@@ -20,7 +20,7 @@ services:
     image: mysql:latest
     container_name: mysql-container
     environment:
-      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: db_practice
     ports:
       - "3306:3306"

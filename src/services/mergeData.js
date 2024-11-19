@@ -6,8 +6,11 @@ export default async function mergeData() {
   try {
     // Hämta data från participant som ändrats senaste 24 timmarna
     const [participants] = await connection.query(
-      `SELECT * FROM participant WHERE modified >= NOW() - INTERVAL 1 DAY`
+      `SELECT * FROM participant`
     );
+
+    console.log("Fetched participants:", participants);
+
 
     if (participants.length === 0) {
       console.log("No new participants found to process.");
@@ -174,8 +177,8 @@ export default async function mergeData() {
     console.log("Data merged successfully!");
   } catch (error) {
     console.error("Error during mergeData:", error);
-  } finally {
-    connection.release();
-  }
+  } 
   console.log("Kör mergeData...");
 }
+
+
