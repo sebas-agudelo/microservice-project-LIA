@@ -1,18 +1,20 @@
-# Använd en officiell Node.js-bild
+# Använd Node.js-basen
 FROM node:18
 
-# Ange arbetskatalog i containern
-WORKDIR /usr/src/app
+# Sätt arbetskatalogen i containern
+WORKDIR /src/app
 
-# Kopiera applikationsfiler
+# Kopiera package.json och package-lock.json för att installera beroenden
 COPY package*.json ./
-COPY . .
 
 # Installera beroenden
 RUN npm install
 
-# Exponera porten för applikationen
+# Kopiera all applikationskod
+COPY . .
+
+# Exponera port (t.ex. 3000 för en webbtjänst)
 EXPOSE 3000
 
 # Starta applikationen
-CMD ["npm", "run", "start"]
+CMD ["node", "src/app.js"]

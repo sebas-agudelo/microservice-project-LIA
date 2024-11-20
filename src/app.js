@@ -1,6 +1,5 @@
 import express from "express";
 import { config } from "dotenv";
-import { dbConnection } from "./db_config/database.js";
 import { dailyJob } from "./jobs/dailyMergeJob.js";
 import mergeData from "./services/mergeData.js";
 
@@ -11,14 +10,26 @@ app.use(express.json());
 
 const PORT = process.env.PORT;
 
+app.post('/api/insertleads', async (req, res) => {
+  try{
+    await mergeData();
+    res.status(200).send("Leads successfully inserted");
+
+  } catch(error){
+    console.log(error);
+    
+  }
+})
+
 app.listen(PORT, async () => {
   try {
     console.log("Ansluten till databasen!");
-    console.log(`Servern är igång på PORT ${PORT} ....`);
 
+    await mergeData();
     dailyJob();
+    console.log('Hello från app.js');
+    
 
-    mergeData()
   } catch (err) {
     console.error("Kunde inte starta servern på grund av databasfel:", err);
     process.exit(1); // Avsluta processen med felkod

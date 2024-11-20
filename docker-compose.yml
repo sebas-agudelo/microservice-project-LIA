@@ -1,31 +1,32 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
     environment:
-      - PORT=3000
-      - DB_HOST=localhost
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=db_practice
-    depends_on:
-      - db
-
-  db:
-    image: mysql:latest
-    container_name: mysql-container
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: db_practice
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}   # Miljövariabel för root-lösenord
+      MYSQL_DATABASE: ${DB_NAME}              # Miljövariabel för databasens namn
     ports:
       - "3306:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql       # Persistens för MySQL-databasdata
+    networks:
+      - mynetwork
+
+  nodejs:
+    build: .                           # Bygger Node.js-applikationen från Dockerfile i aktuell mapp
+    container_name: nodejs
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql                          # Väntar på att MySQL-containern ska starta först
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
 
 volumes:
-  db_data:
+  mysql-data:                           # Definiera volymen för My
