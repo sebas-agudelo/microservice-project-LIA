@@ -1,0 +1,16 @@
+{
+    "databases": [
+        {
+            "db": "db_practice"
+        },
+        {
+            "db": "db_lidl"
+        },
+        {
+            "db": "db_coop"
+        },
+        {
+            "db": "db_ica"
+      }
+    ]
+  }
