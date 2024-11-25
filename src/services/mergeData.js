@@ -7,7 +7,8 @@ export default async function mergeData() {
     for(let i = 0; connections.length; i++){
       const db = connections[i].db;
       const Poll = connections[i].Poll;
-
+      console.log(db);
+      
  
 
       // Use Poll for the current database
