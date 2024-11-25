@@ -20,7 +20,7 @@ export const dbConnection = async () => {
         password: process.env.DB_PASSWORD,
         database: db,
         waitForConnections: true,
-        connectionLimit: 10,
+        // connectionLimit: 10,
         queueLimit: 0,
       });
       console.log("Ansluten till databasen!");

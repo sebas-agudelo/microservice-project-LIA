@@ -6,7 +6,6 @@ services:
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}   # Miljövariabel för root-lösenord
-      MYSQL_DATABASE: ${DB_NAME}              # Miljövariabel för databasens namn
     ports:
       - "3306:3306"
     volumes:
