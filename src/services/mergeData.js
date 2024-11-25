@@ -4,19 +4,19 @@ export default async function mergeData() {
   try {
     const connections = await dbConnection();
 
-    for(let i = 0; connections.length; i++){
+    for(let i = 0; i < connections.length; i++){
       const db = connections[i].db;
       const Poll = connections[i].Poll;
-      console.log(db);
-      
- 
 
-      // Use Poll for the current database
+      console.log('db variabeln från mergeData.js',db);
+      
+
       const [participants] = await Poll.query(
         `SELECT * FROM participant`
       );
 
-      console.log(`Fetched participants from ${db}:`, participants);
+    
+      // console.log(`Fetched participants from ${db}:`, participants);
 
       if (participants.length === 0) {
         console.log(`No new participants found to process in ${db}.`);
@@ -27,7 +27,18 @@ export default async function mergeData() {
 
       // Process participant data as before...
       participants.forEach((participant) => {
-        const phone = participant.telephone;
+        let phone = participant.telephone;
+
+        if(phone.slice(0, 1) === '0'){
+          phone = '46' + phone.slice(1);
+
+        } else if(phone.slice(0, 3) === '+46'){
+          phone = '46' + phone.slice(3);
+
+        }
+
+        console.log(phone);
+        
 
         if (!mergedData[phone]) {
           mergedData[phone] = {
@@ -60,7 +71,7 @@ export default async function mergeData() {
         const data = mergedData[phone];
         if (participant.location) data.locations.add(participant.location);
         data.participants_id.add(participant.id);
-        data.total_amount += parseFloat(participant.amount) || 0;
+        data.total_amount += +participant.amount;
         if (participant.coupon_sent) data.giftcards_sent++;
         data.quiz_answers += parseFloat(participant.points_scored) || 0;
         data.custom_field_1 += parseFloat(participant.time_spent) || 0;
@@ -98,7 +109,11 @@ export default async function mergeData() {
           const hasChanges =
             existingRow.locations !== data.locations ||
             existingRow.participants_id !== data.participants_id ||
-            existingRow.total_amount !== data.total_amount.toString();
+            existingRow.total_amount !== data.total_amount ||
+            existingRow.name !== data.name ||
+            existingRow.email !== data.email ||
+            existingRow.address !== data.address ||
+            existingRow.postalcode !== data.postalcode;
 
           if (hasChanges) {
             await Poll.query(
