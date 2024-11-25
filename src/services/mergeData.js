@@ -4,23 +4,18 @@ export default async function mergeData() {
   try {
     const connections = await dbConnection();
 
-    for(let i = 0; i < connections.length; i++){
+    for (let i = 0; i < connections.length; i++) {
       const db = connections[i].db;
       const Poll = connections[i].Poll;
 
-      console.log('db variabeln från mergeData.js',db);
-      
+      console.log("db variabeln från mergeData.js", db);
 
-      const [participants] = await Poll.query(
-        `SELECT * FROM participant`
-      );
+      const [participants] = await Poll.query(`SELECT * FROM participant`);
 
-    
       // console.log(`Fetched participants from ${db}:`, participants);
 
       if (participants.length === 0) {
         console.log(`No new participants found to process in ${db}.`);
-        
       }
 
       const mergedData = {};
@@ -29,16 +24,13 @@ export default async function mergeData() {
       participants.forEach((participant) => {
         let phone = participant.telephone;
 
-        if(phone.slice(0, 1) === '0'){
-          phone = '46' + phone.slice(1);
-
-        } else if(phone.slice(0, 3) === '+46'){
-          phone = '46' + phone.slice(3);
-
+        if (phone.slice(0, 1) === "0") {
+          phone = "46" + phone.slice(1);
+        } else if (phone.slice(0, 3) === "+46") {
+          phone = "46" + phone.slice(3);
         }
 
         console.log(phone);
-        
 
         if (!mergedData[phone]) {
           mergedData[phone] = {
@@ -49,7 +41,7 @@ export default async function mergeData() {
             name: participant.name,
             email: participant.email,
             address: participant.address,
-            zip: participant.postalcode,
+            zip: participant.postcode,
             city: participant.city,
             personal_number: participant.personal_number,
             quiz_answers: 0,
@@ -57,7 +49,7 @@ export default async function mergeData() {
             custom_field_2: 0,
             custom_field_3: 0,
             custom_field_4: participant.agree_download_report,
-            custom_field_5: participant.custom_field_5,
+            custom_field_5: 0,
             affiliated_views_generated: participant.affiliated_views_generated,
             affiliated_leads_generated: 0,
             affiliated_money_generated: 0,
@@ -77,6 +69,15 @@ export default async function mergeData() {
         data.custom_field_1 += parseFloat(participant.time_spent) || 0;
         data.custom_field_2 += parseInt(participant.sms_parts) || 0;
         data.custom_field_3 += parseFloat(participant.sms_cost) || 0;
+        console.log(
+          `Before incrementing, custom_field_5 for phone ${data.phone}:`,
+          data.custom_field_5
+        );
+        data.custom_field_5 += 1;
+        console.log(
+          `After incrementing, custom_field_5 for phone ${data.phone}:`,
+          data.custom_field_5
+        );
         data.affiliated_leads_generated += participant.receiver_phone ? 1 : 0;
         data.affiliated_money_generated += parseFloat(participant.amount) || 0;
 
@@ -84,7 +85,7 @@ export default async function mergeData() {
         if (participant.name) data.name = participant.name;
         if (participant.email) data.email = participant.email;
         if (participant.address) data.address = participant.address;
-        if (participant.postalcode) data.zip = participant.postalcode;
+        if (participant.postcode) data.zip = participant.postcode;
         if (participant.city) data.city = participant.city;
         if (participant.personal_number)
           data.personal_number = participant.personal_number;
@@ -113,7 +114,7 @@ export default async function mergeData() {
             existingRow.name !== data.name ||
             existingRow.email !== data.email ||
             existingRow.address !== data.address ||
-            existingRow.postalcode !== data.postalcode;
+            existingRow.postcode !== data.postcode;
 
           if (hasChanges) {
             await Poll.query(
@@ -202,4 +203,3 @@ export default async function mergeData() {
   }
   console.log("Kör mergeData...");
 }
-
