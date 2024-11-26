@@ -3,6 +3,7 @@ import { dbConnection } from "../db_config/database.js";
 export default async function mergeData() {
   try {
     const connections = await dbConnection();
+    let count = 0;
 
     for (let i = 0; i < connections.length; i++) {
       const db = connections[i].db;
@@ -30,7 +31,7 @@ export default async function mergeData() {
           phone = "46" + phone.slice(3);
         }
 
-        console.log(phone);
+        // console.log(phone);
 
         if (!mergedData[phone]) {
           mergedData[phone] = {
@@ -54,7 +55,7 @@ export default async function mergeData() {
             affiliated_leads_generated: 0,
             affiliated_money_generated: 0,
             tags: participant.tags,
-            all_dates: new Set(),
+            all_dates: "",
             latest_date: participant.modified,
             phone,
           };
@@ -69,15 +70,15 @@ export default async function mergeData() {
         data.custom_field_1 += parseFloat(participant.time_spent) || 0;
         data.custom_field_2 += parseInt(participant.sms_parts) || 0;
         data.custom_field_3 += parseFloat(participant.sms_cost) || 0;
-        console.log(
-          `Before incrementing, custom_field_5 for phone ${data.phone}:`,
-          data.custom_field_5
-        );
+        // console.log(
+        //   // `Before incrementing, custom_field_5 for phone ${data.phone}:`,
+        //   data.custom_field_5
+        // );
         data.custom_field_5 += 1;
-        console.log(
-          `After incrementing, custom_field_5 for phone ${data.phone}:`,
-          data.custom_field_5
-        );
+        // console.log(
+        //   `After incrementing, custom_field_5 for phone ${data.phone}:`,
+        //   data.custom_field_5
+        // );
         data.affiliated_leads_generated += participant.receiver_phone ? 1 : 0;
         data.affiliated_money_generated += parseFloat(participant.amount) || 0;
 
@@ -91,6 +92,19 @@ export default async function mergeData() {
           data.personal_number = participant.personal_number;
         if (participant.modified > data.latest_date)
           data.latest_date = participant.modified;
+        
+    
+        if (participant.recurring_history === 'recurring1') {
+          
+          count++;
+          if(count === 1){
+            data.all_dates = "Paid";
+          } else if(count > 1){
+            data.all_dates = "Paid x" + count
+
+          }
+        };
+        
       });
 
       // Insert or update leads table
@@ -98,7 +112,7 @@ export default async function mergeData() {
         const data = mergedData[phone];
         data.locations = Array.from(data.locations).join(", ");
         data.participants_id = Array.from(data.participants_id).join(", ");
-        data.all_dates = Array.from(data.all_dates).join(", ");
+        // data.all_dates = Array.from(data.all_dates).join(", ");
 
         const [existingRows] = await Poll.query(
           `SELECT * FROM leads WHERE phone = ?`,
@@ -114,7 +128,8 @@ export default async function mergeData() {
             existingRow.name !== data.name ||
             existingRow.email !== data.email ||
             existingRow.address !== data.address ||
-            existingRow.postcode !== data.postcode;
+            existingRow.postcode !== data.postcode ||
+            existingRow.all_dates !== data.all_dates;
 
           if (hasChanges) {
             await Poll.query(
