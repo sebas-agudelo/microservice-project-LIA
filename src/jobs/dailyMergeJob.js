@@ -2,7 +2,7 @@ import mergeData from "../services/mergeData.js"; // Standardimport
 import cron from "node-cron";
 
 export const dailyJob = async () => {
-  cron.schedule("*/1 * * * *", async () => {
+  cron.schedule("40 * * * *", async () => {
     console.log("Startar sammanslagningsjobbet (varje minut)...");
     try {
       await mergeData(); // Kör mergeData-funktionen

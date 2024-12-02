@@ -10,6 +10,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT;
 
+app.get('/', (req, res) => {
+  res.json('Hello World');
+})
+
 app.post('/api/insertleads', async (req, res) => {
   try{
     await mergeData();
