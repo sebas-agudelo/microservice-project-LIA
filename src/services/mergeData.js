@@ -47,16 +47,14 @@ export default async function mergeData() {
             custom_field_1: 0,
             custom_field_2: 0,
             custom_field_3: 0,
-            custom_field_4: participant.agree_download_report,
+            custom_field_4: 0,
             custom_field_5: 0,
-            affiliated_views_generated: participant.affiliated_views_generated,
+            affiliated_views_generated: [],
             affiliated_leads_generated: 0,
             affiliated_money_generated: 0,
             tags: "",
             all_dates: [],
             latest_date: participant.modified,
-            paidCounter: 0,
-            giftCounter: 0,
             created: "",
             modified: "",
             phone,
@@ -86,7 +84,47 @@ export default async function mergeData() {
         data.created = new Date().toISOString().slice(0, 19).replace('T', ' ');
         data.modified = new Date().toISOString().slice(0, 19).replace('T', ' ');
         data.latest_date = participant.modified;
+        data.custom_field_4 = participant.agree_download_report;
+
+        if(participant.custom_text4 && typeof participant.custom_text4 === "string"){
+
+        const activeCount = participants.filter(
+          (p) => p.custom_text4 === "Active" && normalizePhone(p.telephone) === phone
+        ).length;
         
+        if (activeCount > 0) {
+          const activeText = `Active x${activeCount}`;
+       
+          if (!data.affiliated_views_generated.includes(activeText)) {
+            data.affiliated_views_generated.push(activeText);
+          }
+        };
+
+        const deleteCount = participants.filter(
+          (p) => p.custom_text4 === "Deleted" && normalizePhone(p.telephone) === phone
+        ).length;
+
+        if(deleteCount > 0){
+          const deleteText = `Deleted x${deleteCount}`;
+
+          if(!data.affiliated_views_generated.includes(deleteText)){
+            data.affiliated_views_generated.push(deleteText);
+          }
+        };
+
+        const errorCount = participants.filter(
+          (p) => p.custom_text4 === "Error" && normalizePhone(p.telephone) === phone
+        ).length;
+
+        if(errorCount > 0){
+          const errorText = `Error x${errorCount}`;
+
+          if(!data.affiliated_views_generated.includes(errorText)){
+            data.affiliated_views_generated.push(errorText);
+          }
+        };
+      };
+
         const paidCount = participants.filter(
           (p) => p.recurring_history === "14" && normalizePhone(p.telephone) === phone
         ).length;
@@ -127,6 +165,7 @@ export default async function mergeData() {
             data.all_dates.push(participant.game_type);
           }
         }
+        
       });
 
       // Insert or update the leads table
@@ -134,12 +173,18 @@ export default async function mergeData() {
         const data = mergedData[phone];
         data.locations = Array.from(data.locations).join(", ");
         data.participants_id = Array.from(data.participants_id).join(", ");
-         
+
         //Separera strängen med , tecknet. Annars om det inte finns många olika värden behåll det första
         if (data.all_dates.length > 1) {
           data.all_dates = data.all_dates.join(', ');  
         } else {
           data.all_dates = data.all_dates[0];  
+        }
+
+        if (data.affiliated_views_generated.length > 1) {
+          data.affiliated_views_generated = data.affiliated_views_generated.join(', ');  
+        } else {
+          data.affiliated_views_generated = data.affiliated_views_generated[0];  
         }
 
         const [existingRows] = await Poll.query(
@@ -160,7 +205,9 @@ export default async function mergeData() {
             existingRow.all_dates !== data.all_dates ||
             existingRow.giftcards_sent !== data.giftcards_sent ||
             existingRow.latest_date !== data.latest_date ||
-            existingRow.modified !== data.modified;
+            existingRow.modified !== data.modified || 
+            existingRow.custom_field_4 !== data.custom_field_4 ||
+            existingRow.affiliated_views_generated !== data.affiliated_views_generated;
 
           if (hasChanges) {
             await Poll.query(
