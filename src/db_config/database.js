@@ -1,19 +1,17 @@
 import mysql from "mysql2/promise";
 import { config } from "dotenv";
-import fs from 'fs';
+import fs from "fs";
 
 config();
 
 export const dbConnection = async () => {
-
   try {
-    const dbJson = fs.readFileSync('src/dbJson/dbJson.json', 'utf-8');
+    const dbJson = fs.readFileSync("src/dbJson/dbJson.json", "utf-8");
     const dbJsonData = JSON.parse(dbJson).databases;
-  
+
     console.log(dbJsonData);
 
-
-    const connections = dbJsonData.map(({db}) => {
+    const connections = dbJsonData.map(({ db }) => {
       const Poll = mysql.createPool({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
@@ -24,7 +22,7 @@ export const dbConnection = async () => {
         queueLimit: 0,
       });
       console.log("Ansluten till databasen!");
-      return {db, Poll}
+      return { db, Poll };
     });
 
     return connections;

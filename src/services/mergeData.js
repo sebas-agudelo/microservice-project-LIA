@@ -36,28 +36,31 @@ export default async function mergeData() {
             participants_id: new Set(),
             total_amount: 0,
             giftcards_sent: 0,
-            name: participant.name,
-            email: participant.email,
-            address: participant.address,
-            zip: participant.postcode,
-            city: participant.city,
-            personal_number: participant.personal_number,
+            name: participant.name || "",
+            email: participant.email || "",
+            address: participant.address || "",
+            zip: participant.postcode || "",
+            city: participant.city || "",
+            personal_number: participant.personal_number || "",
             quiz_answers: 0,
             custom_field_1: 0,
             custom_field_2: 0,
             custom_field_3: 0,
-            custom_field_4: participant.agree_download_report,
+            custom_field_4: participant.agree_download_report || 0,
             custom_field_5: 0,
-            affiliated_views_generated: participant.affiliated_views_generated,
+            affiliated_views_generated:
+              participant.affiliated_views_generated || 0,
             affiliated_leads_generated: 0,
             affiliated_money_generated: 0,
             tags: "",
             all_dates: new Set(),
             created: new Date().toISOString(),
             modified: new Date().toISOString(),
+            latest_date: participant.modified || new Date().toISOString(),
             phone,
           };
         }
+
         const data = mergedData[phone];
         const paidCount = participants.filter(
           (p) =>
@@ -131,7 +134,7 @@ export default async function mergeData() {
             const diffInDaysCreated = Math.floor(
               (currentDate - createdDate) / (1000 * 60 * 60 * 24)
             );
-            mergedData[phone].custom_field_5 = `${diffInDaysCreated} days`;
+            mergedData[phone].custom_field_5 = diffInDaysCreated;
           }
 
           if (participant.custom_timestamp_3) {
@@ -203,14 +206,29 @@ export default async function mergeData() {
 
             await Poll.query(
               `UPDATE leads SET 
-                locations = ?, participants_id = ?, total_amount = ?, 
-                giftcards_sent = ?, name = ?, email = ?, address = ?, 
-                zip = ?, city = ?, personal_number = ?, quiz_answers = ?, 
-                custom_field_1 = ?, custom_field_2 = ?, custom_field_3 = ?, 
-                custom_field_4 = ?, custom_field_5 = ?, affiliated_views_generated = ?, 
-                affiliated_leads_generated = ?, affiliated_money_generated = ?, 
-                tags = ?, all_dates = ?, modified = ? 
-              WHERE phone = ?`,
+                  locations = ?, 
+                  participants_id = ?, 
+                  total_amount = ?, 
+                  giftcards_sent = ?, 
+                  name = ?, 
+                  email = ?, 
+                  address = ?, 
+                  zip = ?, 
+                  city = ?, 
+                  personal_number = ?, 
+                  quiz_answers = ?, 
+                  custom_field_1 = ?, 
+                  custom_field_2 = ?, 
+                  custom_field_3 = ?, 
+                  custom_field_4 = ?, 
+                  custom_field_5 = ?, 
+                  affiliated_views_generated = ?, 
+                  affiliated_leads_generated = ?, 
+                  affiliated_money_generated = ?, 
+                  tags = ?, 
+                  all_dates = ?, 
+                  modified = ? 
+                WHERE phone = ?`,
               [
                 data.locations,
                 data.participants_id,
@@ -235,7 +253,6 @@ export default async function mergeData() {
                 data.all_dates,
                 data.modified,
                 data.phone,
-                data.receiver_phone,
               ]
             );
 
@@ -247,14 +264,15 @@ export default async function mergeData() {
           data.created = formatDateForMySQL(new Date());
           data.modified = data.created;
 
+          // If receiver_phone is not part of the schema, remove it:
           await Poll.query(
             `INSERT INTO leads 
-            (locations, participants_id, total_amount, giftcards_sent, name, phone, 
-             email, address, zip, city, personal_number, quiz_answers, custom_field_1, 
-             custom_field_2, custom_field_3, custom_field_4, custom_field_5, 
-             affiliated_views_generated, affiliated_leads_generated, 
-             affiliated_money_generated, tags, all_dates, created, modified) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (locations, participants_id, total_amount, giftcards_sent, name, phone, 
+              email, address, zip, city, personal_number, quiz_answers, custom_field_1, 
+              custom_field_2, custom_field_3, custom_field_4, custom_field_5, 
+              affiliated_views_generated, affiliated_leads_generated, 
+              affiliated_money_generated, tags, all_dates, created, modified) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`,
             [
               data.locations,
               data.participants_id,
@@ -280,7 +298,6 @@ export default async function mergeData() {
               data.all_dates,
               data.created,
               data.modified,
-              data.receiver_phone,
             ]
           );
 
