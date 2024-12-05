@@ -17,19 +17,19 @@ export default async function mergeData() {
       const mergedData = {};
 
       const normalizePhone = (phone) => {
-      if (!phone) return;
+        if (!phone) return;
 
-      if (phone.slice(0, 1) === "0") {
-        phone = "46" + phone.slice(1);
-      } else if (phone.slice(0, 3) === "+46") {
-        phone = "46" + phone.slice(3);
-      }
-      return phone; // Om redan i korrekt format, behåll det
-    }
+        if (phone.slice(0, 1) === "0") {
+          phone = "46" + phone.slice(1);
+        } else if (phone.slice(0, 3) === "+46") {
+          phone = "46" + phone.slice(3);
+        }
+        return phone; // Om redan i korrekt format, behåll det
+      };
 
       // Process participant data as before...
       participants.forEach((participant) => {
-        let phone =  normalizePhone(participant.telephone);
+        let phone = normalizePhone(participant.telephone);
 
         if (!mergedData[phone]) {
           mergedData[phone] = {
@@ -79,71 +79,73 @@ export default async function mergeData() {
         data.zip = participant.postcode;
         data.city = participant.city;
         data.personal_number = participant.personal_number;
-        data.created = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        data.modified = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        data.created = new Date().toISOString().slice(0, 19).replace("T", " ");
+        data.modified = new Date().toISOString().slice(0, 19).replace("T", " ");
         data.latest_date = participant.modified;
         data.custom_field_4 = participant.agree_download_report;
 
         /*CUSTOM_TEXT4, AFFILIATED_VIEWS_GENERETED, AFFILIATED_LEADS_GENERETED, AFFILIATED_MONEY_GENERETED*/
-        if(typeof participant.custom_text4 === "string"){
+        if (typeof participant.custom_text4 === "string") {
+          const activeCount = participants.filter(
+            (p) =>
+              p.custom_text4 === "Active" &&
+              p.recurring_history === "15" &&
+              normalizePhone(p.telephone) === phone
+          ).length;
 
-        const activeCount = participants.filter(
-          (p) => p.custom_text4 === "Active" && 
-          p.recurring_history === '15' && 
-          normalizePhone(p.telephone) === phone
-        ).length;
-        
-        if (activeCount > 0) {
-          const activeText = `Active x${activeCount}`;
-       
-          if (!data.affiliated_views_generated.includes(activeText)) {
-            data.affiliated_views_generated.push(activeText);
+          if (activeCount > 0) {
+            const activeText = `Active x${activeCount}`;
+
+            if (!data.affiliated_views_generated.includes(activeText)) {
+              data.affiliated_views_generated.push(activeText);
+            }
           }
-        };
 
-        const deleteCount = participants.filter(
-          (p) => p.custom_text4 === "Deleted" && 
-          p.recurring_history === '15' && 
-          normalizePhone(p.telephone) === phone
-        ).length;
+          const deleteCount = participants.filter(
+            (p) =>
+              p.custom_text4 === "Deleted" &&
+              p.recurring_history === "15" &&
+              normalizePhone(p.telephone) === phone
+          ).length;
 
-        if(deleteCount > 0){
-          const deleteText = `Deleted x${deleteCount}`;
+          if (deleteCount > 0) {
+            const deleteText = `Deleted x${deleteCount}`;
 
-          if(!data.affiliated_views_generated.includes(deleteText)){
-            data.affiliated_views_generated.push(deleteText);
+            if (!data.affiliated_views_generated.includes(deleteText)) {
+              data.affiliated_views_generated.push(deleteText);
+            }
           }
-        };
 
-        const errorCount = participants.filter(
-          (p) => p.custom_text4 === "Error" && 
-          p.recurring_history === '15' && 
-          normalizePhone(p.telephone) === phone
-        ).length;
+          const errorCount = participants.filter(
+            (p) =>
+              p.custom_text4 === "Error" &&
+              p.recurring_history === "15" &&
+              normalizePhone(p.telephone) === phone
+          ).length;
 
-        if(errorCount > 0){
-          const errorText = `Error x${errorCount}`;
+          if (errorCount > 0) {
+            const errorText = `Error x${errorCount}`;
 
-          if(!data.affiliated_views_generated.includes(errorText)){
-            data.affiliated_views_generated.push(errorText);
+            if (!data.affiliated_views_generated.includes(errorText)) {
+              data.affiliated_views_generated.push(errorText);
+            }
           }
-        };
-      };
+        }
 
-      if(participant.recurring_history === '15' && participant.amount){
-        data.affiliated_money_generated = participant.amount;
-      }
+        if (participant.recurring_history === "15" && participant.amount) {
+          data.affiliated_money_generated = participant.amount;
+        }
 
-      if(participant.recurring_history === '14' && 
-        participant.amount !== null && 
-        participant.amount !== ""){
-        data.tags ++;
-      }
+        if (participant.recurring_history === "14") {
+          data.tags++;
+        }
 
         const paidCount = participants.filter(
-          (p) => p.recurring_history === "14" && normalizePhone(p.telephone) === phone
+          (p) =>
+            p.recurring_history === "14" &&
+            normalizePhone(p.telephone) === phone
         ).length;
-        
+
         if (paidCount > 0) {
           const text = `Paid x${paidCount}`;
           if (!data.all_dates.includes(text)) {
@@ -151,28 +153,49 @@ export default async function mergeData() {
           }
         }
 
-        const giftCount = participants.filter((p) => p.coupon_sent && 
-        p.telephone_receiver_phone !== null &&
-        p.telephone_receiver_phone !== "" &&
-        normalizePhone(p.telephone) === phone).length;
+        const giftCount = participants.filter(
+          (p) =>
+            p.coupon_sent &&
+            p.telephone_receiver_phone !== null &&
+            p.telephone_receiver_phone !== "" &&
+            normalizePhone(p.telephone) === phone
+        ).length;
 
-        if(giftCount > 0){
+        if (giftCount > 0) {
           const textGift = `Giftcards Sent ${giftCount}`;
           if (!data.all_dates.includes(textGift)) {
             data.all_dates.push(textGift);
           }
         }
 
-        if (participant.recurring_history === '6') {
-          if (!data.all_dates.includes('Petition')) {
-            data.all_dates.push('Petition'); 
+        if (participant.recurring_history === "6") {
+          if (!data.all_dates.includes("Petition")) {
+            data.all_dates.push("Petition");
           }
         }
-        
-        if(participant.agree_download_report === 0){
-            if(!data.all_dates.includes('No newsletter')){
-              data.all_dates.push('No newsletter')
-            }
+        if (participant.recurring_history === "15") {
+          const createdDate = new Date(participant.created);
+          const customTimestamp3 = participant.custom_timestamp_3
+            ? new Date(participant.custom_timestamp_3)
+            : new Date(); // Om `custom_timestamp_3` saknas, använd dagens datum
+
+          // Beräkna skillnaden i månader
+          const diffInMonths =
+            (customTimestamp3.getFullYear() - createdDate.getFullYear()) * 12 +
+            (customTimestamp3.getMonth() - createdDate.getMonth());
+
+          // Sätt värdet endast om diffInMonths är större än 0
+          data.affiliated_leads_generated =
+            diffInMonths > 0
+              ? `${diffInMonths} month${diffInMonths === 1 ? "" : "s"}`
+              : null;
+        } else {
+          data.affiliated_leads_generated = null; // Tomt om recurring_history inte är 15
+        }
+        if (participant.agree_download_report === 0) {
+          if (!data.all_dates.includes("No newsletter")) {
+            data.all_dates.push("No newsletter");
+          }
         }
 
         if (participant.recurring_history === "4" && participant.game_type) {
@@ -186,19 +209,18 @@ export default async function mergeData() {
         //   const customTimestamp3 = participant.custom_timestamp_3
         //     ? new Date(participant.custom_timestamp_3)
         //     : new Date(); // Om `custom_timestamp_3` saknas, använd dagens datum
-         
+
         //   // Beräkna skillnaden i månader
-        //   const diffInMonths = 
+        //   const diffInMonths =
         //     (customTimestamp3.getFullYear() - createdDate.getFullYear()) * 12 +
         //     (customTimestamp3.getMonth() - createdDate.getMonth());
-         
+
         //   // Sätt värdet endast om diffInMonths är större än 0
         //   data.affiliated_leads_generated =
         //     diffInMonths > 0 ? `${diffInMonths} month${diffInMonths === 1 ? "" : "s"}` : null;
         // } else {
         //   data.affiliated_leads_generated = null; // Tomt om recurring_history inte är 15
         // }
-
       });
 
       // Insert or update the leads table
@@ -209,15 +231,16 @@ export default async function mergeData() {
 
         //Separera strängen med , tecknet. Annars om det inte finns många olika värden behåll det första
         if (data.all_dates.length > 1) {
-          data.all_dates = data.all_dates.join(', ');  
+          data.all_dates = data.all_dates.join(", ");
         } else {
-          data.all_dates = data.all_dates[0];  
+          data.all_dates = data.all_dates[0];
         }
 
         if (data.affiliated_views_generated.length > 1) {
-          data.affiliated_views_generated = data.affiliated_views_generated.join(', ');  
+          data.affiliated_views_generated =
+            data.affiliated_views_generated.join(", ");
         } else {
-          data.affiliated_views_generated = data.affiliated_views_generated[0];  
+          data.affiliated_views_generated = data.affiliated_views_generated[0];
         }
 
         const [existingRows] = await Poll.query(
@@ -238,9 +261,10 @@ export default async function mergeData() {
             existingRow.all_dates !== data.all_dates ||
             existingRow.giftcards_sent !== data.giftcards_sent ||
             existingRow.latest_date !== data.latest_date ||
-            existingRow.modified !== data.modified || 
+            existingRow.modified !== data.modified ||
             existingRow.custom_field_4 !== data.custom_field_4 ||
-            existingRow.affiliated_views_generated !== data.affiliated_views_generated ||
+            existingRow.affiliated_views_generated !==
+              data.affiliated_views_generated ||
             existingRow.custom_field_4 !== data.custom_field_4 ||
             existingRow.tags !== data.tags;
 
