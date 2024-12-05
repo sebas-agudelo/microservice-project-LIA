@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { dailyJob } from "./jobs/dailyMergeJob.js";
 import mergeData from "./services/mergeData.js";
 
+
 config();
 
 const app = express();
@@ -13,6 +14,8 @@ const PORT = process.env.PORT;
 app.get('/', (req, res) => {
   res.json('Hello World');
 })
+
+
 
 app.post('/api/insertleads', async (req, res) => {
   try{
@@ -29,8 +32,10 @@ app.listen(PORT, async () => {
   try {
     console.log("Ansluten till databasen!");
 
-    await mergeData();
+    // await mergeData();
     dailyJob();
+
+    
     console.log('Hello från app.js');
     
 

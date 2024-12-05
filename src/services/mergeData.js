@@ -47,7 +47,7 @@ export default async function mergeData() {
             custom_field_1: 0,
             custom_field_2: 0,
             custom_field_3: 0,
-            custom_field_4: 0,
+            custom_field_4: participant.agree_download_report,
             custom_field_5: 0,
             affiliated_views_generated: [],
             affiliated_leads_generated: 0,
@@ -71,8 +71,6 @@ export default async function mergeData() {
         data.custom_field_2 += parseInt(participant.sms_parts) || 0;
         data.custom_field_3 += parseFloat(participant.sms_cost) || 0;
         data.custom_field_5 += 1;
-        data.affiliated_leads_generated += participant.telephone_receiver_phone ? 1 : 0;
-        data.affiliated_money_generated += parseFloat(participant.amount) || 0;
 
         // Update other properties if necessary
         data.name = participant.name;
@@ -86,10 +84,13 @@ export default async function mergeData() {
         data.latest_date = participant.modified;
         data.custom_field_4 = participant.agree_download_report;
 
-        if(participant.custom_text4 && typeof participant.custom_text4 === "string"){
+        /*CUSTOM_TEXT4, AFFILIATED_VIEWS_GENERETED, AFFILIATED_LEADS_GENERETED, AFFILIATED_MONEY_GENERETED*/
+        if(typeof participant.custom_text4 === "string"){
 
         const activeCount = participants.filter(
-          (p) => p.custom_text4 === "Active" && normalizePhone(p.telephone) === phone
+          (p) => p.custom_text4 === "Active" && 
+          p.recurring_history === '15' && 
+          normalizePhone(p.telephone) === phone
         ).length;
         
         if (activeCount > 0) {
@@ -101,7 +102,9 @@ export default async function mergeData() {
         };
 
         const deleteCount = participants.filter(
-          (p) => p.custom_text4 === "Deleted" && normalizePhone(p.telephone) === phone
+          (p) => p.custom_text4 === "Deleted" && 
+          p.recurring_history === '15' && 
+          normalizePhone(p.telephone) === phone
         ).length;
 
         if(deleteCount > 0){
@@ -113,7 +116,9 @@ export default async function mergeData() {
         };
 
         const errorCount = participants.filter(
-          (p) => p.custom_text4 === "Error" && normalizePhone(p.telephone) === phone
+          (p) => p.custom_text4 === "Error" && 
+          p.recurring_history === '15' && 
+          normalizePhone(p.telephone) === phone
         ).length;
 
         if(errorCount > 0){
@@ -124,6 +129,16 @@ export default async function mergeData() {
           }
         };
       };
+
+      if(participant.recurring_history === '15' && participant.amount){
+        data.affiliated_money_generated = participant.amount;
+      }
+
+      if(participant.recurring_history === '14' && 
+        participant.amount !== null && 
+        participant.amount !== ""){
+        data.tags ++;
+      }
 
         const paidCount = participants.filter(
           (p) => p.recurring_history === "14" && normalizePhone(p.telephone) === phone
@@ -165,7 +180,25 @@ export default async function mergeData() {
             data.all_dates.push(participant.game_type);
           }
         }
-        
+
+        // if (participant.recurring_history === "15") {
+        //   const createdDate = new Date(participant.created);
+        //   const customTimestamp3 = participant.custom_timestamp_3
+        //     ? new Date(participant.custom_timestamp_3)
+        //     : new Date(); // Om `custom_timestamp_3` saknas, använd dagens datum
+         
+        //   // Beräkna skillnaden i månader
+        //   const diffInMonths = 
+        //     (customTimestamp3.getFullYear() - createdDate.getFullYear()) * 12 +
+        //     (customTimestamp3.getMonth() - createdDate.getMonth());
+         
+        //   // Sätt värdet endast om diffInMonths är större än 0
+        //   data.affiliated_leads_generated =
+        //     diffInMonths > 0 ? `${diffInMonths} month${diffInMonths === 1 ? "" : "s"}` : null;
+        // } else {
+        //   data.affiliated_leads_generated = null; // Tomt om recurring_history inte är 15
+        // }
+
       });
 
       // Insert or update the leads table
@@ -207,7 +240,9 @@ export default async function mergeData() {
             existingRow.latest_date !== data.latest_date ||
             existingRow.modified !== data.modified || 
             existingRow.custom_field_4 !== data.custom_field_4 ||
-            existingRow.affiliated_views_generated !== data.affiliated_views_generated;
+            existingRow.affiliated_views_generated !== data.affiliated_views_generated ||
+            existingRow.custom_field_4 !== data.custom_field_4 ||
+            existingRow.tags !== data.tags;
 
           if (hasChanges) {
             await Poll.query(
